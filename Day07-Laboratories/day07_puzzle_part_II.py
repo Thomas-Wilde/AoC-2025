@@ -27,7 +27,7 @@ class Grid:
       for row in self.data:
         output += "\n"
         for cell in row:
-          output += str(cell)
+          output += " " + str(cell) + " "
       return output
 
 def init_grid(data):
@@ -56,41 +56,47 @@ def count_splits(grid:Grid):
         count += 1
   return count
 
+def count_timelines(grid:Grid):
+  count = 0
+  y = grid.get_height()-1
+  for x in range(0, grid.get_width()):
+    count += int(grid.get(x,y))
+  return count
+
 
 def init_count_grid(width: int, height: int)->Grid:
   grid = Grid(width, height)
   for y in range(0, height):
     for x in range(0, width):
-      grid.set(x, y, 0)
+      grid.set(x, y, int(0))
   return grid
 
 
 def perform_time_beam(grid:Grid):
   count_grid = init_count_grid(grid.get_width(), grid.get_height())
   start_beam(grid, count_grid)
-  y = 2
-  while y < grid.get_height():
+  y = 1
+  while y < grid.get_height()-1:
     x = 0
     while x < grid.get_width():
       # split beam
-      if grid.get(x, y) == "^":
+      if grid.get(x, y) == "|":
         # split beam
-        if grid.get(x, y-1) == "|":
-          grid.set(x-1, y, "|")
-          grid.set(x+1, y, "|")
+        if grid.get(x, y+1) == "^":
+          grid.set(x-1, y+1, "|")
+          grid.set(x+1, y+1, "|")
           # count timelines
-          top = int(count_grid.get(x, y-1))
-          left = int(count_grid.get(x-1, y))
-          count_grid.set(x-1, y, str(left+top))
-          right = int(count_grid.get(x+1, y))
-          count_grid.set(x+1, y, str(right+top))
-      # continue beam
-      elif grid.get(x, y) == ".":
-        if grid.get(x, y-1) == "|":
-          grid.set(x, y, "|")
-          top = int(count_grid.get(x, y-1))
-          old = int(count_grid.get(x, y))
-          count_grid.set(x, y, str(old+top))
+          count_top = int(count_grid.get(x, y))
+          count_left = int(count_grid.get(x-1, y+1))
+          count_grid.set(x-1, y+1, int(count_left+count_top))
+          count_right = int(count_grid.get(x+1, y+1))
+          count_grid.set(x+1, y+1, int(count_right+count_top))
+        # continue beam
+        else:
+          grid.set(x, y+1, "|")
+          count_top = int(count_grid.get(x, y))
+          count_bot = int(count_grid.get(x, y+1))
+          count_grid.set(x, y+1, int(count_top+count_bot))
       x += 1
     y += 1
   return count_grid
@@ -98,14 +104,16 @@ def perform_time_beam(grid:Grid):
 # Part II
 # --- main ---
 # read data
-# file = open("input.data", "r")
-file = open("example.data", "r")
+file = open("input.data", "r")
+# file = open("example.data", "r")
 data = file.readlines()
 
 grid = init_grid(data)
 time_grid = perform_time_beam(grid)
 splits = count_splits(grid)
+timelines = count_timelines(time_grid)
 
 print(grid)
-print("Splits: " + str(splits))
 print(time_grid)
+print("Splits: " + str(splits))
+print("Timelines: " + str(timelines))
